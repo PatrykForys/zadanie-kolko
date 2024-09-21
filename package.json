@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "axios": "latest",
+    "prompt-sync": "latest",
+    "puppeteer": "latest"
+  }
+}
