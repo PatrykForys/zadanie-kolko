@@ -1,11 +1,24 @@
 const puppeteer = require("puppeteer"); // puppeteer do symulowania przeglądarki
 const axios = require("axios"); // axios do obsługi webhooków
 const prompt = require("prompt-sync")(); // prompt-sync do pobierania danych od użytkownika
+const fs = require("fs"); // fs do obsługi systemu plików
 
 const pageUrl = "https://zs2ostrzeszow.edupage.org/substitution/";
 const checkInterval = 3600000;
-const webhook = prompt("Podaj webhook: ");
+const webhookFile = "webhook.txt";
+let webhook;
+
+if (fs.existsSync(webhookFile)) {
+  webhook = fs.readFileSync(webhookFile, "utf8").trim();
+  console.log("Wczytano zapisany webhook:", webhook);
+} else {
+  webhook = prompt("Podaj webhook: ");
+  fs.writeFileSync(webhookFile, webhook, "utf8");
+  console.log("Webhook został zapisany do pliku.");
+}
+
 const schoolClass = prompt("Podaj klasę (Nazwa musi być dokładna): ");
+const checkDay = parseInt(prompt("Podaj dzień na kiedy chcesz sprawdzić zastępstwa (0 - dzisiaj, 1 - jutro): "));
 const webhookUrl = `${webhook}`;
 
 async function checkForUpdates() {
@@ -16,7 +29,7 @@ async function checkForUpdates() {
     await page.goto(pageUrl, { waitUntil: "load" });
     await page.waitForSelector("div.cell", { timeout: 5000 });
 
-    const dateString = getFormattedDate(1);
+    const dateString = getFormattedDate(checkDay);
     const newSubstitution = await page.evaluate(
       (dateString) =>
         Array.from(document.querySelectorAll("div.cell")).some((el) =>
